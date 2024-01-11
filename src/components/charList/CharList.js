@@ -13,7 +13,7 @@ const CharList = (props) => {
     const [charEnded, setCharEnded] = useState(false);
     const effectCalled = useRef(false);
 
-    const {loading, error, getAllCharacters} = useMarvelService();
+    const { loading, error, getAllCharacters } = useMarvelService();
 
     useEffect(() => {
         if (effectCalled.current) return;

@@ -1,14 +1,16 @@
 import './charInfo.scss';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import Spinner from '../spinner/Spinner';
 import Skeleton from '../skeleton/Skeleton';
 import PropTypes from 'prop-types';
 import useMarvelService from '../../services/MarvelService';
 import { Link } from 'react-router-dom';
+import { CSSTransition } from 'react-transition-group';
 
 const CharInfo = ({ charId }) => {
     const [char, setChar] = useState(null);
+    const nodeRef = useRef(null);
 
     const { loading, error, getCharacter, clearError } = useMarvelService();
 
@@ -32,14 +34,23 @@ const CharInfo = ({ charId }) => {
     const skeleton = char || loading || error ? null : <Skeleton />;
     const errorMessage = error ? <ErrorMessage /> : null;
     const spinner = loading ? <Spinner /> : null;
-    const content = !(loading || error || !char) ? <View char={char} /> : null;
 
     return (
         <div className="char__info">
             {skeleton}
             {errorMessage}
             {spinner}
-            {content}
+            <CSSTransition
+                in={!(loading || error || !char)}
+                nodeRef={nodeRef}
+                timeout={500}
+                classNames="char"
+                unmountOnExit
+            >
+                <div ref={nodeRef} >
+                    <View char={char} />
+                </div>
+            </CSSTransition>
         </div>
     )
 }
@@ -51,7 +62,6 @@ const View = ({ char }) => {
     if (thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
         imgStyle = { 'objectFit': 'unset' };
     }
-
 
     return (
         <>
@@ -84,7 +94,6 @@ const View = ({ char }) => {
                             </li>
                         )
                     })}
-
             </ul>
         </>
     )
