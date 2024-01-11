@@ -1,9 +1,10 @@
 import './charList.scss';
-import { useEffect, useRef, useState } from 'react';
+import { createRef, useEffect, useRef, useState } from 'react';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import Spinner from '../spinner/Spinner';
 import PropTypes from 'prop-types';
 import useMarvelService from '../../services/MarvelService';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 const CharList = (props) => {
 
@@ -39,12 +40,16 @@ const CharList = (props) => {
         setCharEnded(ended);
     }
 
-    const itemRefs = useRef([]);
+    const itemRefs = [];
+
+    const addRef = (i, nodeRef) => {
+        itemRefs[i] = nodeRef
+    }
 
     const focusOnItem = (i) => {
-        itemRefs.current.forEach(item => item.classList.remove('char__item_selected'));
-        itemRefs.current[i].classList.add('char__item_selected');
-        itemRefs.current[i].focus();
+        itemRefs.forEach(item => item.current.classList.remove('char__item_selected'));
+        itemRefs[i].current.classList.add('char__item_selected');
+        itemRefs[i].current.focus();
     }
 
     function renderItems(arr) {
@@ -53,31 +58,35 @@ const CharList = (props) => {
             if (item.thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
                 imgStyle = { 'objectFit': 'unset' };
             }
-
+            const nodeRef = createRef();
+            addRef(i, nodeRef)
             return (
-                <li
-                    className="char__item"
-                    tabIndex={0}
-                    ref={el => itemRefs.current[i] = el}
-                    key={item.id}
-                    onClick={() => {
-                        props.onCharSelected(item.id);
-                        focusOnItem(i);
-                    }}
-                    onKeyUp={(e) => {
-                        if (e.key === ' ' || e.key === "Enter") {
+                <CSSTransition nodeRef={nodeRef} key={item.id} timeout={500} classNames="char__item">
+                    <li
+                        className="char__item"
+                        tabIndex={0}
+                        ref={nodeRef}
+                        onClick={() => {
                             props.onCharSelected(item.id);
                             focusOnItem(i);
-                        }
-                    }}>
-                    <img src={item.thumbnail} alt={item.name} style={imgStyle} />
-                    <div className="char__name">{item.name}</div>
-                </li>
+                        }}
+                        onKeyUp={(e) => {
+                            if (e.key === ' ' || e.key === "Enter") {
+                                props.onCharSelected(item.id);
+                                focusOnItem(i);
+                            }
+                        }}>
+                        <img src={item.thumbnail} alt={item.name} style={imgStyle} />
+                        <div className="char__name">{item.name}</div>
+                    </li>
+                </CSSTransition>
             )
         });
         return (
             <ul className="char__grid">
-                {items}
+                <TransitionGroup component={null}>
+                    {items}
+                </TransitionGroup>
             </ul>
         )
     }
