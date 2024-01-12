@@ -1,10 +1,25 @@
 import './charList.scss';
-import { createRef, useEffect, useRef, useState } from 'react';
-import ErrorMessage from '../errorMessage/ErrorMessage';
-import Spinner from '../spinner/Spinner';
+import { createRef, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import useMarvelService from '../../services/MarvelService';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import Spinner from '../spinner/Spinner';
+import { ErrorMessage } from 'formik';
+
+const setContent = (process, Component, newItemLoading) => {
+    switch (process) {
+        case 'waiting':
+            return <Spinner />
+        case 'loading':
+            return newItemLoading ? <Component /> : <Spinner />
+        case 'confirmed':
+            return <Component />
+        case 'error':
+            return <ErrorMessage />
+        default:
+            throw new Error('Unexpected process state')
+    }
+}
 
 const CharList = (props) => {
 
@@ -14,18 +29,20 @@ const CharList = (props) => {
     const [charEnded, setCharEnded] = useState(false);
     const effectCalled = useRef(false);
 
-    const { loading, error, getAllCharacters } = useMarvelService();
+    const { getAllCharacters, process, setProcess } = useMarvelService();
 
     useEffect(() => {
         if (effectCalled.current) return;
         onRequest(offset, true);
         effectCalled.current = true;
+        // eslint-disable-next-line
     }, [])
 
     const onRequest = (offset, initial) => {
         setNewItemLoading(initial ? false : true)
         getAllCharacters(offset)
             .then(onCharListLoaded)
+            .then(() => setProcess('confirmed'))
     }
 
     const onCharListLoaded = (newCharList) => {
@@ -91,16 +108,13 @@ const CharList = (props) => {
         )
     }
 
-    const items = renderItems(charList);
-
-    const errorMessage = error ? <ErrorMessage /> : null;
-    const spinner = loading && !newItemLoading ? <Spinner /> : null;
-
+    const elements = useMemo(() => {
+        return setContent(process, () => renderItems(charList), newItemLoading)
+        // eslint-disable-next-line
+    }, [process])
     return (
         <div className="char__list">
-            {errorMessage}
-            {spinner}
-            {items}
+            {elements}
             <button
                 className="button button__main button__long"
                 disabled={newItemLoading}

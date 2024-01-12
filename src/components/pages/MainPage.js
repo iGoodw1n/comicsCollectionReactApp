@@ -7,7 +7,7 @@ import RandomChar from "../randomChar/RandomChar";
 
 import decoration from '../../resources/img/vision.png';
 import CharSearchForm from "../charSearchForm/CharSearchForm";
-import { Helmet } from "react-helmet";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 
 const MainPage = () => {
 
@@ -19,12 +19,14 @@ const MainPage = () => {
 
     return (
         <>
-            <Helmet>
-                <meta
-                    name="description"
-                    content="Marvel information portal"/>
-                <title>Marvel information portal</title>
-            </Helmet>
+            <HelmetProvider>
+                <Helmet>
+                    <meta
+                        name="description"
+                        content="Marvel information portal" />
+                    <title>Marvel information portal</title>
+                </Helmet>
+            </HelmetProvider>
             <ErrorBoundary>
                 <RandomChar />
             </ErrorBoundary>

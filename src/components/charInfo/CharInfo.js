@@ -1,21 +1,20 @@
 import './charInfo.scss';
 import { useEffect, useRef, useState } from 'react';
-import ErrorMessage from '../errorMessage/ErrorMessage';
-import Spinner from '../spinner/Spinner';
-import Skeleton from '../skeleton/Skeleton';
 import PropTypes from 'prop-types';
 import useMarvelService from '../../services/MarvelService';
 import { Link } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
+import setContent from '../../utils/setContent';
 
 const CharInfo = ({ charId }) => {
     const [char, setChar] = useState(null);
     const nodeRef = useRef(null);
 
-    const { loading, error, getCharacter, clearError } = useMarvelService();
+    const { process, setProcess, getCharacter, clearError } = useMarvelService();
 
     useEffect(() => {
         updateChar();
+        // eslint-disable-next-line
     }, [charId])
 
     const updateChar = () => {
@@ -25,38 +24,30 @@ const CharInfo = ({ charId }) => {
         clearError()
         getCharacter(charId)
             .then(onCharLoaded)
+            .then(() => setProcess('confirmed'))
     }
 
     const onCharLoaded = (char) => {
         setChar(char);
     }
 
-    const skeleton = char || loading || error ? null : <Skeleton />;
-    const errorMessage = error ? <ErrorMessage /> : null;
-    const spinner = loading ? <Spinner /> : null;
-
     return (
         <div className="char__info">
-            {skeleton}
-            {errorMessage}
-            {spinner}
             <CSSTransition
-                in={!(loading || error || !char)}
+                in={process === 'confirmed'}
                 nodeRef={nodeRef}
                 timeout={500}
-                classNames="char"
-                unmountOnExit
-            >
+                classNames="char">
                 <div ref={nodeRef} >
-                    <View char={char} />
+                    {setContent(process, View, char)}
                 </div>
             </CSSTransition>
         </div>
     )
 }
 
-const View = ({ char }) => {
-    const { name, description, thumbnail, homepage, wiki, comics } = char;
+const View = ({ data }) => {
+    const { name, description, thumbnail, homepage, wiki, comics } = data;
 
     let imgStyle = { 'objectFit': 'cover' };
     if (thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
